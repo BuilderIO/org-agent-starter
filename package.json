@@ -1,0 +1,13 @@
+{
+  "name": "@builder.io/claw-starter",
+  "version": "0.0.1",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "test:jira": "node .claude/skills/jira/scripts/tests/run-all.mjs",
+    "test:slack": "node .claude/skills/slack/scripts/tests/run-all.mjs"
+  },
+  "dependencies": {
+    "@slack/web-api": "^7.14.1"
+  }
+}

@@ -1,0 +1,15 @@
+{
+  "jobs": [
+    {
+      "jobs": [
+        {
+          "id": "unique-id",
+          "cron": "0 9 * * 1-5",
+          "description": "Daily at 9am (weekdays): Monitors customer feedback channel for new complaints",
+          "prompt": "Read the last 20 messages in #customer-feedback. Summarize any new complaints and identify which projects they relate to.",
+          "enabled": false
+        }
+      ]
+    }
+  ]
+}
