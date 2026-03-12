@@ -34,6 +34,8 @@ org/
 ## File System Layout
 
 ```
+.agents/skills/          # Skill implementations (slack/, jira/, etc.)
+
 memory/                  # Persistent agent memory (auto-managed across sessions)
   MEMORY.md              # Auto-loaded system memory (max 200 lines — see Memory Discipline)
   *.md                   # Topic-specific memory files (unlimited size)
@@ -43,8 +45,6 @@ org/                     # READ-ONLY org snapshot (synced ~2min, never write)
   projects/              # Project metadata
   active-branches.json   # Active branch list
   archived-branches.json # Archived branch history
-
-.builder/skills/         # Skill implementations (slack/, jira/, etc.)
 ```
 
 ## Integrations
