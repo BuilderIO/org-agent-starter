@@ -1,14 +1,19 @@
 #!/usr/bin/env node
-// Usage: node channel-info.mjs <channel-name-or-id>
+// Usage: node channel-info.mjs <channel-name-or-id-or-url>
 // Example: node channel-info.mjs general
+// Example: node channel-info.mjs https://myworkspace.slack.com/archives/C01234ABCDE
 
-import { slack } from "./client.mjs";
+import { slack, parseSlackUrl, slackUrl } from "./client.mjs";
 
-const channelInput = process.argv[2];
+let channelInput = process.argv[2];
 if (!channelInput) {
-  console.error("Usage: node channel-info.mjs <channel-name-or-id>");
+  console.error("Usage: node channel-info.mjs <channel-name-or-id-or-url>");
   process.exit(1);
 }
+
+// Accept Slack URLs — extract the channel ID
+const parsed = parseSlackUrl(channelInput);
+if (parsed?.channelId) channelInput = parsed.channelId;
 
 let channelId = channelInput;
 if (!channelInput.match(/^[A-Z0-9]+$/i) || channelInput.length < 9) {
@@ -26,6 +31,7 @@ const result = await slack.conversations.info({ channel: channelId });
 const c = result.channel;
 
 console.log(`#${c.name} (${c.id})`);
+console.log(`URL:      ${await slackUrl(c.id)}`);
 console.log(`Purpose: ${c.purpose?.value || "none"}`);
 console.log(`Topic: ${c.topic?.value || "none"}`);
 console.log(`Members: ${c.num_members || "?"}`);

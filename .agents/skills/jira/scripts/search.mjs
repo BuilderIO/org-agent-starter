@@ -4,7 +4,7 @@
 // Example: node search.mjs "assignee = currentUser() AND sprint in openSprints()" --limit 50
 // Example: node search.mjs "labels = backend AND priority = High" --fields summary,status,assignee,priority
 
-import { jiraFetch } from "./client.mjs";
+import { jiraFetch, jiraUrl } from "./client.mjs";
 
 const args = process.argv.slice(2);
 if (!args.length) {
@@ -38,5 +38,6 @@ for (const issue of issues) {
 
   console.log(`${issue.key} [${type}] ${f.summary}`);
   console.log(`  Status: ${status} | Assignee: ${assignee} | Priority: ${priority} | Updated: ${updated}`);
+  console.log(`  URL: ${jiraUrl(issue.key)}`);
   console.log();
 }

@@ -1,16 +1,20 @@
 #!/usr/bin/env node
-// Usage: node issue.mjs <issue-key> [--comments] [--comments-limit N]
+// Usage: node issue.mjs <issue-key-or-url> [--comments] [--comments-limit N]
 // Example: node issue.mjs PROJ-123
-// Example: node issue.mjs PROJ-123 --comments
-// Example: node issue.mjs PROJ-123 --comments --comments-limit 5
+// Example: node issue.mjs https://mycompany.atlassian.net/browse/PROJ-123 --comments
+// Example: node issue.mjs https://jira.company.com/browse/PROJ-123 --comments-limit 5
 
-import { jiraFetch } from "./client.mjs";
+import { jiraFetch, parseJiraUrl, jiraUrl } from "./client.mjs";
 
 const args = process.argv.slice(2);
 if (!args.length) {
-  console.error("Usage: node issue.mjs <issue-key> [--comments] [--comments-limit N]");
+  console.error("Usage: node issue.mjs <issue-key-or-url> [--comments] [--comments-limit N]");
   process.exit(1);
 }
+
+// Accept Jira issue URLs — extract the issue key
+const parsed = parseJiraUrl(args[0]);
+if (parsed?.issueKey) args[0] = parsed.issueKey;
 
 const issueKey = args[0];
 let showComments = false;
@@ -27,7 +31,8 @@ const data = await jiraFetch(
 
 const f = data.fields;
 
-console.log(`=== ${data.key}: ${f.summary} ===\n`);
+console.log(`=== ${data.key}: ${f.summary} ===`);
+console.log(`URL: ${jiraUrl(data.key)}\n`);
 console.log(`Type:     ${f.issuetype?.name || "?"}`);
 console.log(`Status:   ${f.status?.name || "?"}`);
 console.log(`Priority: ${f.priority?.name || "?"}`);

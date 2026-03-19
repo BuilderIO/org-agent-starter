@@ -1,16 +1,27 @@
 #!/usr/bin/env node
 // Usage: node sprint.mjs [--project KEY] [--board-id ID] [--state active|future|closed]
+//        node sprint.mjs <jira-board-or-project-url>
 // Example: node sprint.mjs --project PROJ
 // Example: node sprint.mjs --board-id 42
-// Example: node sprint.mjs --project PROJ --state active
+// Example: node sprint.mjs https://mycompany.atlassian.net/jira/software/projects/PROJ/boards/42
 
-import { jiraFetch } from "./client.mjs";
+import { jiraFetch, parseJiraUrl, jiraUrl } from "./client.mjs";
 
 const args = process.argv.slice(2);
 
 let project = "";
 let boardId = "";
 let state = "active";
+
+// Accept a Jira board/project URL as the first positional argument
+if (args[0] && !args[0].startsWith("--")) {
+  const parsed = parseJiraUrl(args[0]);
+  if (parsed) {
+    if (parsed.boardId) boardId = parsed.boardId;
+    if (parsed.projectKey) project = parsed.projectKey;
+    args.shift();
+  }
+}
 
 for (let i = 0; i < args.length; i++) {
   if (args[i] === "--project" && args[i + 1]) { project = args[i + 1]; i++; }
@@ -68,7 +79,7 @@ for (const sprint of sprints) {
     for (const issue of statusIssues) {
       const f = issue.fields;
       const assignee = f.assignee?.displayName || "Unassigned";
-      console.log(`    ${issue.key} ${f.summary} — ${assignee}`);
+      console.log(`    ${issue.key} ${f.summary} — ${assignee} (${jiraUrl(issue.key)})`);
     }
   }
   console.log();

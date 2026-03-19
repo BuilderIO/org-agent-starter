@@ -2,25 +2,30 @@
 // Transitions an existing Jira issue to a new workflow status.
 //
 // Usage:
-//   node update-status.mjs <issue-key> "<target-status-or-transition>"
+//   node update-status.mjs <issue-key-or-url> "<target-status-or-transition>"
 //   node update-status.mjs ENG-123 "In Progress"
+//   node update-status.mjs https://mycompany.atlassian.net/browse/ENG-123 "In Progress"
 //   node update-status.mjs ENG-123 --list           # prints available transitions
 //
 // The target is matched (case-insensitive, substring) against both the transition
 // name and the destination status name. First match wins.
 
-import { jiraFetch, baseUrl } from "./client.mjs";
+import { jiraFetch, baseUrl, parseJiraUrl } from "./client.mjs";
 
 // ── Argument parsing ───────────────────────────────────────────────────────
 const args = process.argv.slice(2);
 
 if (!args.length) {
   console.error(
-    "Usage: node update-status.mjs <issue-key> \"<target-status>\"\n" +
-    "       node update-status.mjs <issue-key> --list"
+    "Usage: node update-status.mjs <issue-key-or-url> \"<target-status>\"\n" +
+    "       node update-status.mjs <issue-key-or-url> --list"
   );
   process.exit(1);
 }
+
+// Accept Jira issue URLs — extract the issue key
+const parsed = parseJiraUrl(args[0]);
+if (parsed?.issueKey) args[0] = parsed.issueKey;
 
 const issueKey = args[0];
 const listMode = args.includes("--list");

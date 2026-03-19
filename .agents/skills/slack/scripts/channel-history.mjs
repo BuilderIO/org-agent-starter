@@ -1,17 +1,22 @@
 #!/usr/bin/env node
-// Usage: node channel-history.mjs <channel-name-or-id> [--limit N] [--oldest YYYY-MM-DD] [--latest YYYY-MM-DD]
+// Usage: node channel-history.mjs <channel-name-or-id-or-url> [--limit N] [--oldest YYYY-MM-DD] [--latest YYYY-MM-DD]
 // Example: node channel-history.mjs general --limit 10
 // Example: node channel-history.mjs C01234ABCDE --oldest 2025-01-01 --limit 50
+// Example: node channel-history.mjs https://myworkspace.slack.com/archives/C01234ABCDE
 
-import { slack } from "./client.mjs";
+import { slack, parseSlackUrl, slackUrl } from "./client.mjs";
 
 const args = process.argv.slice(2);
 if (!args.length) {
-  console.error("Usage: node channel-history.mjs <channel-name-or-id> [--limit N] [--oldest YYYY-MM-DD] [--latest YYYY-MM-DD]");
+  console.error("Usage: node channel-history.mjs <channel-name-or-id-or-url> [--limit N] [--oldest YYYY-MM-DD] [--latest YYYY-MM-DD]");
   process.exit(1);
 }
 
 let channelInput = args[0];
+
+// Accept Slack URLs — extract the channel ID
+const parsed = parseSlackUrl(channelInput);
+if (parsed?.channelId) channelInput = parsed.channelId;
 let limit = 20;
 let oldest, latest;
 
@@ -43,10 +48,14 @@ if (latest) opts.latest = latest;
 const result = await slack.conversations.history(opts);
 const messages = result.messages || [];
 
-console.log(`${messages.length} messages from channel ${channelInput}:\n`);
+const channelLink = await slackUrl(channelId);
+console.log(`${messages.length} messages from channel ${channelInput} (${channelLink}):\n`);
 
 for (const m of messages.reverse()) {
   const date = new Date(parseFloat(m.ts) * 1000).toISOString().slice(0, 16);
   console.log(`[${date}] ${m.user || "bot"}: ${m.text?.slice(0, 500)}`);
-  if (m.reply_count) console.log(`  (${m.reply_count} replies)`);
+  if (m.reply_count) {
+    const threadLink = await slackUrl(channelId, m.ts);
+    console.log(`  (${m.reply_count} replies — ${threadLink})`);
+  }
 }

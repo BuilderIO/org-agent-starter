@@ -76,14 +76,14 @@ Combine filters with `AND` / `OR`. Use parentheses for grouping.
 
 ### issue.mjs
 
-Get full details of a specific issue — description, status, assignee, labels, and optionally comments.
+Get full details of a specific issue — description, status, assignee, labels, and optionally comments. Accepts an issue key or a Jira URL (including custom domains).
 
 ```bash
 # Basic issue details
 node scripts/issue.mjs PROJ-123
 
-# Include recent comments
-node scripts/issue.mjs PROJ-123 --comments
+# From a URL (atlassian.net or custom domain)
+node scripts/issue.mjs https://mycompany.atlassian.net/browse/PROJ-123 --comments
 
 # Limit comments shown
 node scripts/issue.mjs PROJ-123 --comments --comments-limit 5
@@ -91,7 +91,7 @@ node scripts/issue.mjs PROJ-123 --comments --comments-limit 5
 
 ### sprint.mjs
 
-See the current sprint — what's in it, grouped by status, with assignees. Great for standup-style overviews.
+See the current sprint — what's in it, grouped by status, with assignees. Great for standup-style overviews. Accepts `--project`, `--board-id`, or a Jira board/project URL.
 
 ```bash
 # Active sprint for a project
@@ -99,6 +99,9 @@ node scripts/sprint.mjs --project PROJ
 
 # By board ID directly
 node scripts/sprint.mjs --board-id 42
+
+# From a board URL
+node scripts/sprint.mjs https://mycompany.atlassian.net/jira/software/projects/PROJ/boards/42
 
 # See future sprints too
 node scripts/sprint.mjs --project PROJ --state future
@@ -135,14 +138,14 @@ URL: https://mycompany.atlassian.net/browse/ENG-4821
 
 ### update-status.mjs
 
-Transition an existing Jira issue to a new workflow status.
+Transition an existing Jira issue to a new workflow status. Accepts an issue key or URL.
 
 ```bash
 # Transition by status name (case-insensitive, fuzzy match)
 node scripts/update-status.mjs ENG-123 "In Progress"
 
-# Transition by exact transition name
-node scripts/update-status.mjs ENG-123 "Start Review"
+# From a URL
+node scripts/update-status.mjs https://mycompany.atlassian.net/browse/ENG-123 "In Progress"
 
 # List all available transitions for a ticket
 node scripts/update-status.mjs ENG-123 --list
@@ -209,6 +212,8 @@ The script fetches all available transitions, matches the user-supplied name aga
 
 ## Tips
 
+- Jira URLs are accepted anywhere an issue key is needed — paste the browser URL directly; works for both `*.atlassian.net` and custom domains
+- Board/project URLs are accepted by `sprint.mjs` to identify the board without knowing its ID
 - JQL is case-insensitive for keywords (`AND`, `ORDER BY`) but field values may be case-sensitive
 - Use `currentUser()` to refer to the authenticated user without knowing their email
 - `sprint in openSprints()` catches all active sprints across boards

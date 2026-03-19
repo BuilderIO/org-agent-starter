@@ -1,5 +1,6 @@
 #!/usr/bin/env node
 // Usage: node read-current-thread.mjs <channel-id> <thread-ts> [--limit N]
+//        node read-current-thread.mjs <slack-thread-url> [--limit N]
 // Reads the full thread context for a given Slack thread.
 // Designed for the agent to call when it needs deeper context from its origin thread.
 //
@@ -8,8 +9,9 @@
 //   slack/dm/{teamId}/{userId}
 //
 // Example: node read-current-thread.mjs C07ABC123 1234567890.123456
+// Example: node read-current-thread.mjs https://myworkspace.slack.com/archives/C07ABC123/p1234567890123456
 
-import { slack } from "./client.mjs";
+import { slack, parseSlackUrl, slackUrl } from "./client.mjs";
 
 const args = process.argv.slice(2);
 let limit = 50;
@@ -21,10 +23,20 @@ if (limitIdx !== -1) {
   args.splice(limitIdx, 2);
 }
 
+// Accept a single Slack thread URL as the only argument
+const parsed = parseSlackUrl(args[0]);
+if (parsed?.channelId && parsed?.threadTs) {
+  args[0] = parsed.channelId;
+  args[1] = parsed.threadTs;
+} else if (parsed?.channelId) {
+  args[0] = parsed.channelId;
+}
+
 if (args.length < 2) {
   console.error(
     "Usage: node read-current-thread.mjs <channel-id> <thread-ts> [--limit N]",
   );
+  console.error("       node read-current-thread.mjs <slack-thread-url> [--limit N]");
   console.error("");
   console.error("Extract channel-id and thread-ts from your channelId:");
   console.error("  slack/thread/{teamId}/{channelId}/{threadTs}");
@@ -46,7 +58,8 @@ if (messages.length === 0) {
   process.exit(0);
 }
 
-console.log(`${messages.length} messages in thread:\n`);
+const threadLink = await slackUrl(channelId, threadTs);
+console.log(`${messages.length} messages in thread (${threadLink}):\n`);
 
 for (const m of messages) {
   const date = new Date(parseFloat(m.ts) * 1000).toISOString().slice(0, 16);

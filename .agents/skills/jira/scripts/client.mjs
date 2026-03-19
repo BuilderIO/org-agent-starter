@@ -35,3 +35,53 @@ export async function jiraFetch(path, opts = {}) {
 }
 
 export { baseUrl };
+
+export function jiraUrl(issueKey) {
+  return `${baseUrl}/browse/${issueKey}`;
+}
+
+// Parses Jira URLs into { issueKey, projectKey, boardId, type }
+//
+// Supported formats:
+//   https://{domain}.atlassian.net/browse/{PROJ-123}           → issue
+//   https://{custom-domain}/browse/{PROJ-123}                  → issue (custom domain)
+//   https://{domain}/jira/software/projects/{PROJ}/boards/{id} → board
+//   https://{domain}/jira/software/projects/{PROJ}             → project
+//
+// Returns null if the input is not a recognizable Jira URL.
+export function parseJiraUrl(input) {
+  if (typeof input !== "string") return null;
+  if (!input.startsWith("http://") && !input.startsWith("https://")) return null;
+
+  let url;
+  try {
+    url = new URL(input);
+  } catch {
+    return null;
+  }
+
+  const parts = url.pathname.split("/").filter(Boolean);
+
+  // /browse/{ISSUE-KEY}  — works for both atlassian.net and custom domains
+  const browseIdx = parts.indexOf("browse");
+  if (browseIdx !== -1 && parts[browseIdx + 1]) {
+    return { issueKey: parts[browseIdx + 1], projectKey: null, boardId: null, type: "issue" };
+  }
+
+  // /jira/software/projects/{PROJECT}/boards/{boardId}[/...]
+  const boardsIdx = parts.indexOf("boards");
+  if (boardsIdx !== -1) {
+    const boardId = parts[boardsIdx + 1] ? String(parts[boardsIdx + 1]) : null;
+    const projectsIdx = parts.indexOf("projects");
+    const projectKey = projectsIdx !== -1 ? parts[projectsIdx + 1] : null;
+    return { issueKey: null, projectKey: projectKey || null, boardId, type: "board" };
+  }
+
+  // /jira/software/projects/{PROJECT}
+  const projectsIdx = parts.indexOf("projects");
+  if (projectsIdx !== -1 && parts[projectsIdx + 1]) {
+    return { issueKey: null, projectKey: parts[projectsIdx + 1], boardId: null, type: "project" };
+  }
+
+  return null;
+}
